@@ -1,0 +1,13 @@
+{
+  "scripts": {
+    "lint": "standard",
+    "start": "node ."
+  },
+  "dependencies": {
+    "spotify-buddylist": "^1.0.0",
+    "spotify-web-api-node": "^4.0.0"
+  },
+  "devDependencies": {
+    "standard": "^14.3.4"
+  }
+}
