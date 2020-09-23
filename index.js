@@ -2,7 +2,14 @@ const fs = require('fs').promises
 const SpotifyWebApi = require('spotify-web-api-node')
 const buddyList = require('spotify-buddylist')
 const config = require('./config')
-const state = require('./state')
+
+const state = {}
+
+try {
+  Object.assign(state, require('./state'))
+} catch (err) {
+  // First run, ignore missing state.
+}
 
 const api = buddyList.wrapWebApi(new SpotifyWebApi({ spDcCookie: config.spDcCookie }))
 
