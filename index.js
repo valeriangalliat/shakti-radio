@@ -1,21 +1,12 @@
-const fs = require('fs').promises
 const SpotifyWebApi = require('spotify-web-api-node')
 const buddyList = require('spotify-buddylist')
+const SpotifyToYoutube = require('spotify-to-youtube')
+const youtube = require('./youtube')
 const config = require('./config')
+const { state, saveState } = require('./state')
 
-const state = {}
-
-try {
-  Object.assign(state, require('./state'))
-} catch (err) {
-  // First run, ignore missing state.
-}
-
-const api = buddyList.wrapWebApi(new SpotifyWebApi({ spDcCookie: config.spDcCookie }))
-
-function saveState () {
-  return fs.writeFile(`${__dirname}/state.json`, JSON.stringify(state, null, 2) + '\n')
-}
+const api = buddyList.wrapWebApi(new SpotifyWebApi({ spDcCookie: config.spotify.spDcCookie }))
+const spotifyToYoutube = SpotifyToYoutube(api)
 
 function log (...args) {
   const localTime = new Date().toLocaleString('sv', { timeZone: 'America/Montreal' }).split(' ').pop()
@@ -42,11 +33,11 @@ async function isNewDay () {
 }
 
 async function clearPlaylist (batch = 0) {
-  const tracksResponse = await api.getPlaylistTracks(config.playlist)
+  const tracksResponse = await api.getPlaylistTracks(config.spotify.playlist)
   const tracks = tracksResponse.body.items.map(item => ({ uri: item.track.uri }))
 
   log('Clearing playlist batch', batch, 'with', tracks.length, 'items')
-  await api.removeTracksFromPlaylist(config.playlist, tracks)
+  await api.removeTracksFromPlaylist(config.spotify.playlist, tracks)
 
   if (tracks.length === tracksResponse.body.limit) {
     return clearPlaylist(batch + 1)
@@ -55,19 +46,19 @@ async function clearPlaylist (batch = 0) {
 
 async function getCurrentlyPlaying () {
   const activity = await api.getFriendActivity()
-  return activity.body.friends.find(friend => friend.user.name === config.friendName)
+  return activity.body.friends.find(friend => friend.user.name === config.spotify.friendName)
 }
 
 async function authenticateApi () {
   // No token or less than 1 minute left on token.
-  if (!state.token || state.token.accessTokenExpirationTimestampMs < Date.now() + 1000 * 60) {
+  if (!state.spotifyToken || state.spotifyToken.accessTokenExpirationTimestampMs < Date.now() + 1000 * 60) {
     log('Refreshing token')
     const tokenResponse = await api.getWebAccessToken()
-    state.token = tokenResponse.body
+    state.spotifyToken = tokenResponse.body
     await saveState()
   }
 
-  api.setAccessToken(state.token.accessToken)
+  api.setAccessToken(state.spotifyToken.accessToken)
 }
 
 async function main () {
@@ -87,10 +78,14 @@ async function main () {
     await clearPlaylist()
   }
 
-  log('Adding to playlist')
-  await api.addTracksToPlaylist(config.playlist, [track])
+  log('Adding to Spotify playlist')
+  await api.addTracksToPlaylist(config.spotify.playlist, [track])
   state.lastAddedTrack = track
   await saveState()
+
+  log('Adding to YouTube playlist')
+  const videoId = await spotifyToYoutube(track)
+  await youtube.addTrackToPlaylist(config.youtube.playlist, videoId)
 }
 
 main()

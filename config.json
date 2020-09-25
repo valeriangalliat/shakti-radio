@@ -1,5 +1,12 @@
 {
-  "spDcCookie": "",
-  "playlist": "5qgFzOvllbtIehVfd66SZG",
-  "friendName": "shaktirockgym"
+  "spotify": {
+    "spDcCookie": "",
+    "playlist": "5qgFzOvllbtIehVfd66SZG",
+    "friendName": "shaktirockgym"
+  },
+  "youtube": {
+    "clientId": "",
+    "clientSecret": "",
+    "playlist": "PL3gQ6-WYh7kX1CARbXnNuP4kgnG0E5Guu"
+  }
 }
