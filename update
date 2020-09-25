@@ -1,3 +1,6 @@
-#!/usr/bin/env node
+#!/bin/sh -e
 
-require('./')
+cd "$(dirname "$0")"
+date=$(date +%Y-%m-%d)
+mkdir -p logs
+node index.js 2>&1 | tee -a "logs/$date.log"
