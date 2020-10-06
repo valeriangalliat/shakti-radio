@@ -24,24 +24,34 @@ function promisify (object, method, params) {
   })
 }
 
-async function clearPlaylist (batch = 0) {
+async function listPlaylist (tracks = [], nextPageToken) {
   const itemsResponse = await promisify(youtube.playlistItems, 'list', {
     part: 'id',
     playlistId: config.youtube.playlist,
-    maxResults: 50
+    maxResults: 50,
+    pageToken: nextPageToken
   })
 
-  const tracks = itemsResponse.data.items.map(item => item.id)
+  tracks.push(...itemsResponse.data.items.map(item => item.id))
 
-  log('Clearing playlist batch', batch, 'with', tracks.length, 'items')
-
-  // Can't paralellize this for some weird reason.
-  for (const id of tracks) {
-    await promisify(youtube.playlistItems, 'delete', { id })
+  if (itemsResponse.data.nextPageToken) {
+    return listPlaylist(tracks, itemsResponse.data.nextPageToken)
   }
 
-  if (tracks.length === itemsResponse.data.pageInfo.resultsPerPage) {
-    return clearPlaylist(batch + 1)
+  return tracks
+}
+
+async function clearPlaylist (batch = 0) {
+  // For some reason you need to fetch the whole playlist at first, as
+  // if you fetch just the first page and delete all songs from it, and
+  // then fetch the first page of the playlist again, some deletions won't be
+  // persisted just yet and that'll cause a conflict.
+  const tracks = await listPlaylist()
+
+  // Can't paralellize this for some weird reason, while it doesn't return
+  // any error, only one track will be deleted.
+  for (const id of tracks) {
+    await promisify(youtube.playlistItems, 'delete', { id })
   }
 }
 
