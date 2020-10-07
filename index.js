@@ -55,8 +55,10 @@ async function main () {
 
   if (config.youtube) {
     log('Adding to YouTube playlist')
-    const videoId = await spotifyToYoutube(track)
-    await youtube.addTrackToPlaylist(videoId)
+    const youtubeTrack = await spotifyToYoutube(track, { raw: true })
+    const youtubeArtist = 'artist' in youtubeTrack ? ('name' in youtubeTrack.artist ? youtubeTrack.artist.name : youtubeTrack.artist) : youtubeTrack.author
+    log('[spotify-to-youtube]', 'Matched', current.track.artist.name, '-', current.track.name, `(${track}) with`, youtubeArtist, '-', youtubeTrack.name, `(${youtubeTrack.videoId})`)
+    await youtube.addTrackToPlaylist(youtubeTrack.videoId)
   }
 }
 
