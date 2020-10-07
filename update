@@ -1,6 +1,7 @@
 #!/bin/sh -e
 
 cd "$(dirname "$0")"
+dir=logs/$(date +%Y/%m)
 date=$(date +%Y-%m-%d)
-mkdir -p logs
-node index.js 2>&1 | tee -a "logs/$date.log"
+mkdir -p "$dir"
+node index.js 2>&1 | tee -a "$dir/$date.log"
