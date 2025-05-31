@@ -4,12 +4,16 @@
     "start": "node ."
   },
   "dependencies": {
-    "googleapis": "^60.0.1",
+    "googleapis": "^149.0.0",
     "spotify-buddylist": "^2.0.0",
     "spotify-to-youtube": "^1.0.1",
     "spotify-web-api-node": "^4.0.0"
   },
   "devDependencies": {
     "standard": "^14.3.4"
+  },
+  "overridesComment": "https://github.com/googleapis/google-api-nodejs-client/issues/3461#issuecomment-2385280950",
+  "overrides": {
+    "whatwg-url": "^14.0.0"
   }
 }
