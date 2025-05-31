@@ -18,9 +18,27 @@ async function clearPlaylist (batch = 0) {
   }
 }
 
-async function getCurrentlyPlaying () {
+async function getCurrentlyPlayingImpl () {
   const activity = await buddyList.getFriendActivity(state.spotifyToken.accessToken)
   return activity.friends.find(friend => friend.user.name === config.spotify.friendName)
+}
+
+async function getCurrentlyPlaying () {
+  try {
+    return await getCurrentlyPlayingImpl()
+  } catch (error) {
+    log('Error getting currently playing', error)
+
+    if (error.response?.status === 401) {
+      delete state.spotifyToken
+      await saveState()
+      log('Refreshing token')
+      await authenticateApi()
+      return await getCurrentlyPlayingImpl()
+    }
+
+    throw error
+  }
 }
 
 async function authenticateApi () {
